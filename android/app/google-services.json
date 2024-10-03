@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "767272172506",
+    "project_id": "book-eaf9a",
+    "storage_bucket": "book-eaf9a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:767272172506:android:69eb37bcfbac517d20dee3",
+        "android_client_info": {
+          "package_name": "com.rajt"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA-9j0by4GilYjXgYwj_jV0qwt5FjOj1YA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
