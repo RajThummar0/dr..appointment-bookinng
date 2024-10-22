@@ -14,7 +14,6 @@ class HomePage extends StatelessWidget {
   final String userName;
 
   HomePage({required this.userName});
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
