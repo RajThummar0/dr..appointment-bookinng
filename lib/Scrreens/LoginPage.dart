@@ -1,22 +1,67 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/Scrreens/home_page.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({Key? key}) : super(key: key); // Add const and key
-
   @override
   _LoginPageState createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
   String? _email;
   String? _password;
+  bool _isLoading = false;
+
+  // Function to handle login
+  Future<void> _login() async {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+      setState(() {
+        _isLoading = true; // Show loading indicator
+      });
+      
+      try {
+        // Firebase login using email and password
+        UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+          email: _email!,
+          password: _password!,
+        );
+
+        // If successful, redirect to HomePage
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HomePage(userName: _email!), // Pass user email to HomePage
+          ),
+        );
+      } on FirebaseAuthException catch (e) {
+        // Show error if login fails
+        String message = '';
+        if (e.code == 'user-not-found') {
+          message = 'No user found for that email.';
+        } else if (e.code == 'wrong-password') {
+          message = 'Wrong password provided for that user.';
+        } else {
+          message = 'Login failed. Please try again.';
+        }
+        
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+      } finally {
+        setState(() {
+          _isLoading = false; // Stop loading indicator
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20), // Add const
+        padding: EdgeInsets.symmetric(horizontal: 20),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
@@ -35,7 +80,7 @@ class _LoginPageState extends State<LoginPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    '𝕃𝕆𝔾𝕀ℕ',
+                    'LOGIN',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -43,8 +88,10 @@ class _LoginPageState extends State<LoginPage> {
                       fontSize: 36,
                     ),
                   ),
-                  const SizedBox(height: 30), // Add const
-                  _buildGradientTextField(
+                  SizedBox(height: 30),
+
+                  // Email Field
+                  _buildTextField(
                     label: 'Email',
                     icon: Icons.email,
                     validator: (value) {
@@ -59,8 +106,10 @@ class _LoginPageState extends State<LoginPage> {
                       _email = value;
                     },
                   ),
-                  const SizedBox(height: 20), // Add const
-                  _buildGradientTextField(
+                  SizedBox(height: 20),
+
+                  // Password Field
+                  _buildTextField(
                     label: 'Password',
                     icon: Icons.lock,
                     obscureText: true,
@@ -76,59 +125,39 @@ class _LoginPageState extends State<LoginPage> {
                       _password = value;
                     },
                   ),
-                  const SizedBox(height: 30), // Add const
+                  SizedBox(height: 30),
+
+                  // Login Button
                   Container(
                     width: double.infinity,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Colors.blue.shade900, Colors.blue.shade600],
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        padding: const EdgeInsets.symmetric(vertical: 15), // Add const
-                        shadowColor: Colors.black.withOpacity(0.3),
-                        elevation: 5,
+                        padding: EdgeInsets.symmetric(vertical: 15), backgroundColor: Colors.blue.shade700,
                       ),
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/HomePage');
-                        if (_formKey.currentState!.validate()) {
-                          _formKey.currentState!.save();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Login Successful!\nEmail: $_email',
-                              ),
+                      onPressed: _isLoading ? null : _login,
+                      child: _isLoading
+                          ? CircularProgressIndicator(color: Colors.white)
+                          : Text(
+                              'Login',
+                              style: TextStyle(fontSize: 18, color: Colors.white),
                             ),
-                          );
-                        }
-                      },
-                      child: const Text( // Add const
-                        'Login',
-                        style: TextStyle(fontSize: 18, color: Colors.white),
-                      ),
                     ),
                   ),
-                  const SizedBox(height: 20), // Add const
+
+                  SizedBox(height: 20),
+
+                  // Navigate to Signup
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text( // Add const
-                        "Don't have an account?",
-                        style: TextStyle(color: Colors.white),
-                      ),
+                      Text("Don't have an account?", style: TextStyle(color: Colors.white)),
                       TextButton(
                         onPressed: () {
                           Navigator.pushNamed(context, '/signup');
                         },
-                        child: const Text( // Add const
-                          'signup',
-                          style: TextStyle(
-                            color: Colors.yellowAccent,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        child: Text(
+                          'Sign Up',
+                          style: TextStyle(color: Colors.yellowAccent, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ],
@@ -142,44 +171,29 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _buildGradientTextField({
+  // Reusable Text Field Widget
+  Widget _buildTextField({
     required String label,
     required IconData icon,
     bool obscureText = false,
     required String? Function(String?) validator,
     required void Function(String?) onSaved,
   }) {
-    return Stack(
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.blue.shade800, Colors.blue.shade600],
-            ),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          padding: const EdgeInsets.all(2), // Add const
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: TextFormField(
-              style: const TextStyle(color: Colors.white), // Add const
-              obscureText: obscureText,
-              decoration: InputDecoration(
-                labelText: label,
-                labelStyle: const TextStyle(color: Colors.white), // Add const
-                prefixIcon: Icon(icon, color: Colors.white),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 18), // Add const
-              ),
-              validator: validator,
-              onSaved: onSaved,
-            ),
-          ),
+    return TextFormField(
+      style: TextStyle(color: Colors.white),
+      obscureText: obscureText,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(color: Colors.white),
+        prefixIcon: Icon(icon, color: Colors.white),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
         ),
-      ],
+        filled: true,
+        fillColor: Colors.white.withOpacity(0.2),
+      ),
+      validator: validator,
+      onSaved: onSaved,
     );
   }
 }

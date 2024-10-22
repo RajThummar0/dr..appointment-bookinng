@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class SignUpPage extends StatefulWidget {
@@ -7,47 +8,82 @@ class SignUpPage extends StatefulWidget {
 
 class _SignUpPageState extends State<SignUpPage> {
   final _formKey = GlobalKey<FormState>();
-  String? _name;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
   String? _email;
   String? _password;
+  String? _name;
+  bool _isLoading = false;
+
+  // Function to handle sign up
+  Future<void> _signUp() async {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+      setState(() {
+        _isLoading = true;
+      });
+      try {
+        UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+          email: _email!,
+          password: _password!,
+        );
+
+        // Redirect to HomePage on successful sign-up
+        Navigator.pushReplacementNamed(context, '/HomePage');
+      } on FirebaseAuthException catch (e) {
+        String message = '';
+        if (e.code == 'email-already-in-use') {
+          message = 'This email is already in use.';
+        } else if (e.code == 'weak-password') {
+          message = 'Password is too weak.';
+        } else {
+          message = 'Sign Up failed. Please try again.';
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        padding: EdgeInsets.symmetric(horizontal: 20),
         decoration: BoxDecoration(
-          // Navy blue gradient background
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Colors.blue.shade900,  // Navy Blue
-              Colors.blue.shade500,  // Lighter Blue
+              Colors.blue.shade900,
+              Colors.blue.shade500,
             ],
           ),
         ),
         child: Center(
           child: SingleChildScrollView(
+            padding: EdgeInsets.all(20),
             child: Form(
               key: _formKey,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Sign Up Title with Navy Accent
+                  // Sign Up title
                   Text(
-                    '𝕊𝕀𝔾ℕ 𝕌ℙ',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: Colors.white,
+                    'Sign Up',
+                    style: TextStyle(
+                      fontSize: 28,
                       fontWeight: FontWeight.bold,
-                      letterSpacing: 1.5,
-                      fontSize: 36,
+                      color: Colors.white,
                     ),
                   ),
-                  SizedBox(height: 30),
+                  SizedBox(height: 40),
 
-                  // Name Field with Navy Blue Gradient Border
-                  _buildGradientTextField(
+                  // Name Field
+                  _buildTextField(
                     label: 'Name',
                     icon: Icons.person,
                     validator: (value) {
@@ -62,8 +98,8 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                   SizedBox(height: 20),
 
-                  // Email Field with Navy Blue Gradient Border
-                  _buildGradientTextField(
+                  // Email Field
+                  _buildTextField(
                     label: 'Email',
                     icon: Icons.email,
                     validator: (value) {
@@ -80,14 +116,14 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                   SizedBox(height: 20),
 
-                  // Password Field with Navy Blue Gradient Border
-                  _buildGradientTextField(
+                  // Password Field
+                  _buildTextField(
                     label: 'Password',
                     icon: Icons.lock,
                     obscureText: true,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter a password';
+                        return 'Please enter your password';
                       } else if (value.length < 6) {
                         return 'Password must be at least 6 characters long';
                       }
@@ -99,43 +135,28 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                   SizedBox(height: 30),
 
-                  // Gradient Sign Up Button
-                  Container(
+                  // Sign Up Button
+                  SizedBox(
                     width: double.infinity,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Colors.blue.shade900, Colors.blue.shade600],
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
                     child: ElevatedButton(
+                      onPressed: _isLoading ? null : _signUp,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        padding: EdgeInsets.symmetric(vertical: 15),
-                        shadowColor: Colors.black.withOpacity(0.3),
-                        elevation: 5,
+                        padding: EdgeInsets.symmetric(vertical: 15), backgroundColor: Colors.blue.shade700,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          _formKey.currentState!.save();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Sign Up Successful!\nName: $_name\nEmail: $_email',
-                              ),
+                      child: _isLoading
+                          ? CircularProgressIndicator(color: Colors.white)
+                          : Text(
+                              'Sign Up',
+                              style: TextStyle(fontSize: 18, color: Colors.white),
                             ),
-                          );
-                        }
-                      },
-                      child: Text(
-                        'Sign Up',
-                        style: TextStyle(fontSize: 18, color: Colors.white),
-                      ),
                     ),
                   ),
                   SizedBox(height: 20),
 
-                  // Navigate to Login Page
+                  // Navigate to Login
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -166,45 +187,29 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 
-  // Custom TextField with Navy Gradient Border
-  Widget _buildGradientTextField({
+  // Reusable TextField Widget
+  Widget _buildTextField({
     required String label,
     required IconData icon,
     bool obscureText = false,
     required String? Function(String?) validator,
     required void Function(String?) onSaved,
   }) {
-    return Stack(
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.blue.shade800, Colors.blue.shade600],  // Navy gradient border
-            ),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          padding: EdgeInsets.all(2),  // Padding for gradient
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.1),  // Background color
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: TextFormField(
-              style: TextStyle(color: Colors.white),
-              obscureText: obscureText,
-              decoration: InputDecoration(
-                labelText: label,
-                labelStyle: TextStyle(color: Colors.white),
-                prefixIcon: Icon(icon, color: Colors.white),
-                border: InputBorder.none,  // No default border
-                contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 18),
-              ),
-              validator: validator,
-              onSaved: onSaved,
-            ),
-          ),
+    return TextFormField(
+      style: TextStyle(color: Colors.white),
+      obscureText: obscureText,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(color: Colors.white),
+        prefixIcon: Icon(icon, color: Colors.white),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
         ),
-      ],
+        filled: true,
+        fillColor: Colors.white.withOpacity(0.2),
+      ),
+      validator: validator,
+      onSaved: onSaved,
     );
   }
 }

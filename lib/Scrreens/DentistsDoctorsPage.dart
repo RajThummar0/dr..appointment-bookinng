@@ -5,6 +5,9 @@ import 'package:flutter_application_1/Scrreens/date_page.dart';
 import 'package:flutter_application_1/Scrreens/home_page.dart';
 import 'package:flutter_application_1/Scrreens/immunology_doctors_page.dart';
 import 'package:flutter_application_1/Scrreens/Profile_Page.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Firebase Auth for user ID
+
 class DentistsDoctorsPage extends StatelessWidget {
   final List<Doctor> doctors = [
     Doctor(
@@ -177,7 +180,6 @@ class _DoctorCardState extends State<DoctorCard> {
   }
 }
 
-// DoctorDetailPage remains the same as provided in the previous implementation
 class DoctorDetailPage extends StatelessWidget {
   final Doctor doctor;
 
@@ -234,7 +236,6 @@ class DoctorDetailPage extends StatelessWidget {
   }
 }
 
-// BookAppointmentPage remains the same as provided in the previous implementation
 class BookAppointmentPage extends StatefulWidget {
   final Doctor doctor;
 
@@ -327,22 +328,38 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
 
   void _confirmAppointment() {
     if (_selectedDate != null && _selectedTime != null) {
-      showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: Text("Appointment Confirmed"),
-            content: Text(
-                "Your appointment with ${widget.doctor.name} is confirmed on ${_selectedDate!.toLocal().toString().split(' ')[0]} at ${_selectedTime!.format(context)}."),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text("OK"),
-              ),
-            ],
-          );
-        },
-      );
+      // Add the appointment to Firestore
+      FirebaseFirestore.instance.collection('appointments').add({
+        'doctor_name': widget.doctor.name,
+        'specialty': widget.doctor.specialty,
+        'date': _selectedDate!.toIso8601String(),
+        'time': _selectedTime!.format(context),
+        'user_id': FirebaseAuth.instance.currentUser?.uid ?? 'anonymous', // Actual user ID
+      }).then((value) {
+        // Show confirmation dialog
+        showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: Text("Appointment Confirmed"),
+              content: Text(
+                  "Your appointment with ${widget.doctor.name} is confirmed on ${_selectedDate!.toLocal().toString().split(' ')[0]} at ${_selectedTime!.format(context)}."),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text("OK"),
+                ),
+              ],
+            );
+          },
+        );
+      }).catchError((error) {
+        // Log the error and show a message
+        print("Error adding appointment: $error");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to book appointment: $error")),
+        );
+      });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Please select both date and time.")),
