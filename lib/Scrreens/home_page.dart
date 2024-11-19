@@ -14,6 +14,7 @@ class HomePage extends StatelessWidget {
   final String userName;
 
   HomePage({required this.userName});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -25,29 +26,12 @@ class HomePage extends StatelessWidget {
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.person),
+            icon: Icon(Icons.calendar_today),
             onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => ProfilePage(
-                    userName: userName,
-                    email: 'johndoe@gmail.com',
-                    appointmentHistory: [
-                      Appointment(
-                        doctorName: 'Dr. Smith',
-                        specialty: 'Cardiology',
-                        dateTime: '2023-10-01 10:30 AM',
-                        status: 'Completed',
-                      ),
-                      Appointment(
-                        doctorName: 'Dr. Johnson',
-                        specialty: 'Neurology',
-                        dateTime: '2023-09-20 12:00 PM',
-                        status: 'Completed',
-                      ),
-                    ],
-                  ),
+                  builder: (context) => DatePage(),
                 ),
               );
             },
@@ -141,8 +125,8 @@ class HomePage extends StatelessWidget {
             label: 'Chat',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today),
-            label: 'Date',
+            icon: Icon(Icons.account_circle), // Profile icon
+            label: 'Profile', // Change label to Profile
           ),
         ],
         onTap: (index) {
@@ -159,10 +143,28 @@ class HomePage extends StatelessWidget {
               );
               break;
             case 2:
+              // Navigate to ProfilePage
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => DatePage(),
+                  builder: (context) => ProfilePage(
+                    userName: userName,  // Pass the actual username
+                    email: 'johndoe@gmail.com',  // Pass the actual email
+                    appointmentHistory: [
+                      Appointment(
+                        doctorName: 'Dr. Smith',
+                        specialty: 'Cardiology',
+                        dateTime: '2023-10-01 10:30 AM',
+                        status: 'Completed', doctorId: '',
+                      ),
+                      Appointment(
+                        doctorName: 'Dr. Johnson',
+                        specialty: 'Neurology',
+                        dateTime: '2023-09-20 12:00 PM',
+                        status: 'Completed', doctorId: '',
+                      ),
+                    ], initialUserName: '', initialEmail: '',
+                  ),
                 ),
               );
               break;
@@ -192,7 +194,7 @@ class CategoriesGrid extends StatelessWidget {
               MaterialPageRoute(builder: (context) => PathologyDoctorsPage()),
             );
           },
-        ),  
+        ),
         _buildCategoryCard(
           context,
           title: 'Immunology',
@@ -281,6 +283,7 @@ class CategoriesGrid extends StatelessWidget {
               SizedBox(height: 10),
               Text(
                 title,
+                textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color),
               ),
             ],
@@ -307,12 +310,11 @@ class UpcomingScheduleCard extends StatelessWidget {
     return Card(
       elevation: 6,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      color: Colors.blue[50],
-      margin: EdgeInsets.symmetric(vertical: 8),
+      color: Colors.orange[50],
       child: ListTile(
-        leading: Icon(Icons.calendar_today, color: Colors.blue),
         title: Text(doctorName),
-        subtitle: Text('$specialty\n$dateTime'),
+        subtitle: Text('$specialty \n$dateTime'),
+        trailing: Icon(Icons.arrow_forward),
       ),
     );
   }
@@ -334,13 +336,11 @@ class TopDoctorCard extends StatelessWidget {
     return Card(
       elevation: 6,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      color: Colors.orange[50],
-      margin: EdgeInsets.symmetric(vertical: 8),
+      color: Colors.green[50],
       child: ListTile(
-        leading: Icon(Icons.star, color: Colors.orange),
         title: Text(doctorName),
-        subtitle: Text(specialty),
-        trailing: Text('$ratings ratings'),
+        subtitle: Text('$specialty \nRatings: $ratings'),
+        trailing: Icon(Icons.arrow_forward),
       ),
     );
   }

@@ -1,6 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   final String userName;
   final String email;
   final List<Appointment> appointmentHistory;
@@ -8,122 +10,179 @@ class ProfilePage extends StatelessWidget {
   ProfilePage({
     required this.userName,
     required this.email,
-    required this.appointmentHistory,
+    required this.appointmentHistory, required String initialUserName, required String initialEmail,
   });
+
+  @override
+  _ProfilePageState createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  String _userName = '';
+  bool _isEditingName = false;
+  final TextEditingController _nameController = TextEditingController();
+
+  double _rating = 0.0;
+  final TextEditingController _reviewController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _userName = widget.userName;
+  }
+
+  // Update user name in Firestore
+  Future<void> _updateUserName(String newName) async {
+    final CollectionReference users = FirebaseFirestore.instance.collection('users');
+
+    try {
+      await users.doc(widget.email).set({'name': newName}, SetOptions(merge: true));
+      setState(() {
+        _userName = newName;
+        _isEditingName = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Name updated successfully!')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to update name: $e')),
+      );
+    }
+  }
+
+  // Submit review and rating to Firestore
+  Future<void> _submitReview() async {
+    if (_reviewController.text.isEmpty || _rating == 0.0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please provide a rating and review')),
+      );
+      return;
+    }
+
+    final CollectionReference reviews = FirebaseFirestore.instance.collection('reviews');
+
+    try {
+      await reviews.add({
+        'userName': _userName,
+        'email': widget.email,
+        'review': _reviewController.text,
+        'rating': _rating,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      setState(() {
+        _reviewController.clear();
+        _rating = 0.0;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Review submitted successfully!')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to submit review: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Profile Page'),
-        backgroundColor: Colors.blueAccent,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.edit),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => EditProfilePage(
-                    userName: userName,
-                    email: email,
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
+        backgroundColor: Colors.blue.shade700,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            // User Avatar and Info
-            Center(
-              child: CircleAvatar(
-                radius: 50,
-                backgroundImage: AssetImage('assets/avatar.png'), // Replace with an actual image
-              ),
-            ),
+          children: [
+            _buildUserInfo(),
             SizedBox(height: 20),
-            Center(
-              child: Text(
-                userName,
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blueAccent,
-                ),
-              ),
-            ),
-            Center(
-              child: Text(
-                email,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey,
-                ),
-              ),
-            ),
-            SizedBox(height: 30),
+            _buildAppointmentHistory(),
+            SizedBox(height: 20),
+            _buildReviewSection(),
+          ],
+        ),
+      ),
+    );
+  }
 
-            // Appointment History Section
-            Text(
-              'Appointment History',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.blueAccent,
+  // Build User Info Section
+  Widget _buildUserInfo() {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 40,
+              backgroundColor: Colors.blue.shade700,
+              child: Text(
+                _userName.isNotEmpty ? _userName[0].toUpperCase() : '?',
+                style: TextStyle(fontSize: 32, color: Colors.white),
               ),
             ),
-            SizedBox(height: 10),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              itemCount: appointmentHistory.length,
-              itemBuilder: (context, index) {
-                final appointment = appointmentHistory[index];
-                return Card(
-                  margin: EdgeInsets.symmetric(vertical: 8),
-                  child: ListTile(
-                    title: Text(
-                      appointment.doctorName,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blueAccent,
-                      ),
+            SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _isEditingName
+                      ? TextField(
+                          controller: _nameController,
+                          decoration: InputDecoration(
+                            labelText: 'Enter new name',
+                            suffixIcon: IconButton(
+                              icon: Icon(Icons.check, color: Colors.green),
+                              onPressed: () {
+                                if (_nameController.text.isNotEmpty) {
+                                  _updateUserName(_nameController.text);
+                                }
+                              },
+                            ),
+                          ),
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              _userName,
+                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.edit, color: Colors.blue),
+                              onPressed: () {
+                                setState(() {
+                                  _isEditingName = true;
+                                  _nameController.text = _userName;
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                  SizedBox(height: 8),
+                  Container(
+                    padding: EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    subtitle: Text('${appointment.specialty}\n${appointment.dateTime}'),
-                    trailing: Text(
-                      appointment.status,
-                      style: TextStyle(
-                        color: appointment.status == 'Completed' ? Colors.green : Colors.orange,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.email, color: Colors.blue.shade700),
+                        SizedBox(width: 8),
+                        Text(
+                          widget.email,
+                          style: TextStyle(fontSize: 16, color: Colors.black87),
+                        ),
+                      ],
                     ),
                   ),
-                );
-              },
-            ),
-            SizedBox(height: 30),
-
-            // Payment Section (just for display)
-            Text(
-              'Payment Information',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.blueAccent,
-              ),
-            ),
-            SizedBox(height: 10),
-            Card(
-              margin: EdgeInsets.symmetric(vertical: 8),
-              child: ListTile(
-                title: Text('Total Paid:'),
-                subtitle: Text('₹1500'), // Example amount
-                trailing: Icon(Icons.payment, color: Colors.blueAccent),
+                ],
               ),
             ),
           ],
@@ -131,82 +190,86 @@ class ProfilePage extends StatelessWidget {
       ),
     );
   }
-}
 
-// Edit Profile Page
-class EditProfilePage extends StatefulWidget {
-  final String userName;
-  final String email;
-
-  EditProfilePage({required this.userName, required this.email});
-
-  @override
-  _EditProfilePageState createState() => _EditProfilePageState();
-}
-
-class _EditProfilePageState extends State<EditProfilePage> {
-  late TextEditingController _nameController;
-  late TextEditingController _emailController;
-
-  @override
-  void initState() {
-    super.initState();
-    _nameController = TextEditingController(text: widget.userName);
-    _emailController = TextEditingController(text: widget.email);
+  // Build Appointment History Section
+  Widget _buildAppointmentHistory() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Appointment History',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        Divider(),
+        ...widget.appointmentHistory.map((appointment) => _buildAppointmentCard(appointment)),
+      ],
+    );
   }
 
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _emailController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Edit Profile'),
-        backgroundColor: Colors.blueAccent,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+  // Build Appointment Card
+  Widget _buildAppointmentCard(Appointment appointment) {
+    return Card(
+      elevation: 3,
+      margin: EdgeInsets.symmetric(vertical: 8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: EdgeInsets.all(16),
         child: Column(
-          children: <Widget>[
-            TextField(
-              controller: _nameController,
-              decoration: InputDecoration(
-                labelText: 'Name',
-                border: OutlineInputBorder(),
-              ),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Doctor: ${appointment.doctorName}',
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 20),
-            TextField(
-              controller: _emailController,
-              decoration: InputDecoration(
-                labelText: 'Email',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            SizedBox(height: 30),
-            ElevatedButton(
-              onPressed: () {
-                // Handle the profile save action
-                Navigator.pop(context, {
-                  'userName': _nameController.text,
-                  'email': _emailController.text,
-                });
-              },
-              child: Text('Save Changes'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueAccent,
-                padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-              ),
-            ),
-            
+            Text('Specialty: ${appointment.specialty}'),
+            Text('Date: ${appointment.dateTime}'),
           ],
         ),
       ),
+    );
+  }
+
+  // Build Review Section
+  Widget _buildReviewSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Submit a Review',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        SizedBox(height: 10),
+        RatingBar.builder(
+          initialRating: 0.0,
+          minRating: 1,
+          direction: Axis.horizontal,
+          allowHalfRating: true,
+          itemCount: 5,
+          itemBuilder: (context, _) => Icon(Icons.star, color: Colors.amber),
+          onRatingUpdate: (rating) {
+            setState(() {
+              _rating = rating;
+            });
+          },
+        ),
+        SizedBox(height: 10),
+        TextField(
+          controller: _reviewController,
+          decoration: InputDecoration(
+            labelText: 'Write your review here',
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+          maxLines: 3,
+        ),
+        SizedBox(height: 10),
+        ElevatedButton(
+          onPressed: _submitReview,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blue.shade700,
+          ),
+          child: Text('Submit Review'),
+        ),
+      ],
     );
   }
 }
@@ -216,12 +279,10 @@ class Appointment {
   final String doctorName;
   final String specialty;
   final String dateTime;
-  final String status;
 
   Appointment({
     required this.doctorName,
     required this.specialty,
-    required this.dateTime,
-    required this.status,
+    required this.dateTime, required String status, required String doctorId,
   });
 }
