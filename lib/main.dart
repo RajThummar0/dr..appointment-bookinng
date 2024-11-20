@@ -51,8 +51,8 @@ class MyApp extends StatelessWidget {
         '/signup': (context) => SignUpPage(),
         '/HomePage': (context) => HomePage(userName: ''),
         '/ProfilePage': (context) => ProfilePage(
-          userName: 'John Doe',
-          email: 'johndoe@gmail.com',
+          userName: '_userName',
+          email: 'widget.email',
           appointmentHistory: [
             Appointment(
               doctorName: 'Dr. Smith',

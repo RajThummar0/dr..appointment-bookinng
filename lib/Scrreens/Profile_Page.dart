@@ -4,7 +4,7 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
 class ProfilePage extends StatefulWidget {
   final String userName;
-  final String email;
+  final String email; // Kept for backend operations, not displayed
   final List<Appointment> appointmentHistory;
 
   ProfilePage({
@@ -65,7 +65,6 @@ class _ProfilePageState extends State<ProfilePage> {
     try {
       await reviews.add({
         'userName': _userName,
-        'email': widget.email,
         'review': _reviewController.text,
         'rating': _rating,
         'timestamp': FieldValue.serverTimestamp(),
@@ -164,24 +163,6 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                           ],
                         ),
-                  SizedBox(height: 8),
-                  Container(
-                    padding: EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.email, color: Colors.blue.shade700),
-                        SizedBox(width: 8),
-                        Text(
-                          widget.email,
-                          style: TextStyle(fontSize: 16, color: Colors.black87),
-                        ),
-                      ],
-                    ),
-                  ),
                 ],
               ),
             ),
