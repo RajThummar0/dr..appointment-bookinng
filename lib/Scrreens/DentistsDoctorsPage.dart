@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';// Firebase Auth for user ID
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class DentistsDoctorsPage extends StatelessWidget {
   final List<Doctor> doctors = [
@@ -255,11 +255,12 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
   }
 
   Future<void> _selectDate() async {
+    DateTime now = DateTime.now();
     DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2021),
-      lastDate: DateTime(2025),
+      initialDate: now,
+      firstDate: now,
+      lastDate: DateTime(now.year + 2),
     );
     if (picked != null && picked != _selectedDate) {
       setState(() {
@@ -300,7 +301,8 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-                'Appointment booked with ${widget.doctor.name} on $formattedDate at $formattedTime'),
+              'Appointment booked with ${widget.doctor.name} on $formattedDate at $formattedTime',
+            ),
           ),
         );
         Navigator.pop(context);

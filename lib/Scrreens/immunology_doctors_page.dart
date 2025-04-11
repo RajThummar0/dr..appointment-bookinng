@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_application_1/Scrreens/date_page.dart';
 
 class ImmunologyDoctorsPage extends StatelessWidget {
   final List<Doctor> doctors = [
@@ -135,7 +136,6 @@ class DoctorCard extends StatelessWidget {
   }
 }
 
-
 class DoctorDetailPage extends StatelessWidget {
   final Doctor doctor;
 
@@ -257,11 +257,12 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
   }
 
   Future<void> _selectDate() async {
+    DateTime now = DateTime.now();
     DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2021),
-      lastDate: DateTime(2025),
+      initialDate: now,
+      firstDate: now,
+      lastDate: DateTime(now.year + 2),
     );
     if (picked != null && picked != _selectedDate) {
       setState(() {

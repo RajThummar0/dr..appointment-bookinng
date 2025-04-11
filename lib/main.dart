@@ -12,6 +12,8 @@ import 'package:flutter_application_1/Scrreens/signUpPage.dart';
 import 'package:flutter_application_1/Scrreens/Gynaelogy.dart';
 import 'package:flutter_application_1/Scrreens/DentistsDoctorsPage.dart';
 import 'package:flutter_application_1/firebase_options.dart';
+import 'package:flutter_application_1/Scrreens/DoctorMapPage.dart';
+
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -68,6 +70,8 @@ class MyApp extends StatelessWidget {
             ),
           ],
         ),
+        '/map': (context) => DoctorMapPage(),
+
         '/DatePage': (context) => DatePage(),
         '/ChatPage': (context) => ChatPage(),
       },

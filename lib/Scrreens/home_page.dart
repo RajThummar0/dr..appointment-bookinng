@@ -9,6 +9,7 @@ import 'package:flutter_application_1/Scrreens/Pathology_Doctors_Page.dart';
 import 'package:flutter_application_1/Scrreens/Profile_Page.dart';
 import 'package:flutter_application_1/Scrreens/LoginPage.dart';
 import 'package:flutter_application_1/Scrreens/neurology_doctors_Page.dart';
+import 'package:flutter_application_1/Scrreens/DoctorMapPage.dart'; // ✅ New Import
 
 class HomePage extends StatelessWidget {
   final String userName;
@@ -117,22 +118,27 @@ class HomePage extends StatelessWidget {
         unselectedItemColor: Colors.grey[300],
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
+            icon: Icon(Icons.map),
+            label: 'Maps',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.chat),
             label: 'Chat',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.account_circle), // Profile icon
-            label: 'Profile', // Change label to Profile
+            icon: Icon(Icons.account_circle),
+            label: 'Profile',
           ),
         ],
         onTap: (index) {
           switch (index) {
             case 0:
-              // Already on Home, no action needed
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DoctorMapPage(), // ✅ Opens map page
+                ),
+              );
               break;
             case 1:
               Navigator.push(
@@ -143,27 +149,30 @@ class HomePage extends StatelessWidget {
               );
               break;
             case 2:
-              // Navigate to ProfilePage
               Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => ProfilePage(
-                    userName: userName,  // Pass the actual username
-                    email: 'johndoe@gmail.com',  // Pass the actual email
+                    userName: userName,
+                    email: 'johndoe@gmail.com',
                     appointmentHistory: [
                       Appointment(
                         doctorName: 'Dr. Smith',
                         specialty: 'Cardiology',
                         dateTime: '2023-10-01 10:30 AM',
-                        status: 'Completed', doctorId: '',
+                        status: 'Completed',
+                        doctorId: '',
                       ),
                       Appointment(
                         doctorName: 'Dr. Johnson',
                         specialty: 'Neurology',
                         dateTime: '2023-09-20 12:00 PM',
-                        status: 'Completed', doctorId: '',
+                        status: 'Completed',
+                        doctorId: '',
                       ),
-                    ], initialUserName: '', initialEmail: '',
+                    ],
+                    initialUserName: '',
+                    initialEmail: '',
                   ),
                 ),
               );
@@ -175,6 +184,7 @@ class HomePage extends StatelessWidget {
   }
 }
 
+// Category Grid
 class CategoriesGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -187,7 +197,7 @@ class CategoriesGrid extends StatelessWidget {
           context,
           title: 'Pathology',
           icon: Icons.biotech,
-          color: Color.fromARGB(255, 48, 128, 194)!,
+          color: Color.fromARGB(255, 48, 128, 194),
           onTap: () {
             Navigator.push(
               context,
@@ -199,7 +209,7 @@ class CategoriesGrid extends StatelessWidget {
           context,
           title: 'Immunology',
           icon: Icons.science,
-          color: Color.fromARGB(255, 141, 84, 246)!,
+          color: Color.fromARGB(255, 141, 84, 246),
           onTap: () {
             Navigator.push(
               context,
@@ -211,7 +221,7 @@ class CategoriesGrid extends StatelessWidget {
           context,
           title: 'Gynaecology',
           icon: Icons.pregnant_woman,
-          color: Color.fromARGB(255, 67, 113, 14)!,
+          color: Color.fromARGB(255, 67, 113, 14),
           onTap: () {
             Navigator.push(
               context,
@@ -223,7 +233,7 @@ class CategoriesGrid extends StatelessWidget {
           context,
           title: 'Cardiology',
           icon: Icons.health_and_safety,
-          color: const Color.fromARGB(255, 162, 101, 9)!,
+          color: Color.fromARGB(255, 162, 101, 9),
           onTap: () {
             Navigator.push(
               context,
@@ -235,7 +245,7 @@ class CategoriesGrid extends StatelessWidget {
           context,
           title: 'Neurology',
           icon: Icons.psychology,
-          color: const Color.fromARGB(255, 136, 123, 10)!,
+          color: Color.fromARGB(255, 136, 123, 10),
           onTap: () {
             Navigator.push(
               context,
@@ -247,7 +257,7 @@ class CategoriesGrid extends StatelessWidget {
           context,
           title: 'Dentist',
           icon: Icons.health_and_safety,
-          color: Color.fromARGB(255, 94, 92, 92)!,
+          color: Color.fromARGB(255, 94, 92, 92),
           onTap: () {
             Navigator.push(
               context,
@@ -294,6 +304,7 @@ class CategoriesGrid extends StatelessWidget {
   }
 }
 
+// Upcoming Schedule
 class UpcomingScheduleCard extends StatelessWidget {
   final String doctorName;
   final String specialty;
@@ -320,6 +331,7 @@ class UpcomingScheduleCard extends StatelessWidget {
   }
 }
 
+// Top Doctor Card
 class TopDoctorCard extends StatelessWidget {
   final String doctorName;
   final String specialty;
