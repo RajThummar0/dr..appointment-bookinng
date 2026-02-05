@@ -86,6 +86,7 @@ class MyApp extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return CircularProgressIndicator(); // Show loading indicator
         } else if (snapshot.hasData) {
+          
           // If user is authenticated, navigate to HomePage
           return HomePage(userName: snapshot.data!.email!);
         } else {
